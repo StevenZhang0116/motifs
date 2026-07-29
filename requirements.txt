@@ -1,0 +1,3 @@
+numpy>=1.23
+# Optional, for sparse matrices and exponential impulse responses:
+# scipy>=1.9
