@@ -14,8 +14,6 @@ levels:
 The implementation keeps these definitions separate because a weighted walk,
 an induced subgraph, and a motif enrichment z-score are not interchangeable.
 
-Current package version: **0.6.0**.
-
 Primary references:
 
 > Y. Hu, S. L. Brunton, N. Cain, S. Mihalas, J. N. Kutz, and
