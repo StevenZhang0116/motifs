@@ -14,31 +14,75 @@ levels:
 The implementation keeps these definitions separate because a weighted walk,
 an induced subgraph, and a motif enrichment z-score are not interchangeable.
 
-Primary references:
+Current package version: **0.6.0**.
 
-> Y. Hu, S. L. Brunton, N. Cain, S. Mihalas, J. N. Kutz, and
-> E. Shea-Brown, *Feedback through graph motifs relates structure and function
-> in complex networks*, Physical Review E 98, 062312 (2018).
-> DOI: 10.1103/PhysRevE.98.062312
+## Primary literature
 
-> S. Recanatesi, G. K. Ocker, M. A. Buice, and E. Shea-Brown,
-> *Dimensionality in recurrent spiking networks: Global trends in activity and
-> local origins in connectivity*, PLOS Computational Biology 15(7), e1006446
-> (2019). DOI: 10.1371/journal.pcbi.1006446
+The links below point to the primary papers behind the mathematical definitions
+or scientific analyses used by this package.
 
-> L. Zhao, B. Beverlin II, T. Netoff, and D. Q. Nykamp,
-> *Synchronization from Second Order Network Connectivity Statistics*,
-> Frontiers in Computational Neuroscience 5:28 (2011).
-> DOI: 10.3389/fncom.2011.00028
+1. **Hu et al. (2018), feedback and timescales.**
+   [Publisher article](https://doi.org/10.1103/PhysRevE.98.062312) ·
+   [open HTML version](https://ar5iv.labs.arxiv.org/html/1605.09073).
+   This is the primary source for chain cumulants, PRE closed-walk cycle
+   cumulants, input/readout-specific cumulants, the motif transfer-function
+   resummation, and the cutoff-time theorem.
+2. **Recanatesi et al. (2019), covariance and dimensionality motifs.**
+   [PLOS article](https://doi.org/10.1371/journal.pcbi.1006446) ·
+   [S1 mathematical supplement](https://doi.org/10.1371/journal.pcbi.1006446.s001).
+   This is the primary source for the covariance-relevant chain, divergent,
+   convergent, reciprocal, and mixed-trace motif families used together.
+3. **Zhao et al. (2011), SONET second-order motifs.**
+   [Open-access article](https://doi.org/10.3389/fncom.2011.00028).
+   This is the primary source for the exact reciprocal, convergent, divergent,
+   and chain second-order connectivity statistics used by SONETs.
+4. **Hu et al. (2014), motif-cumulant partitions.**
+   [Publisher article](https://doi.org/10.1103/PhysRevE.89.032802).
+   This is the primary source for the general motif-cumulant framework and its
+   population/block-partition extension.
+5. **Milo et al. (2002), classical motif enrichment.**
+   [Science article](https://doi.org/10.1126/science.298.5594.824).
+   This motivates interpreting a finite subgraph as a network motif through
+   enrichment or depletion relative to an explicit randomized ensemble.
+6. **Batagelj and Mrvar (2001), directed triad census.**
+   [Social Networks article](https://doi.org/10.1016/S0378-8733%2801%2900035-1).
+   This is a standard reference for the 16-class directed triad census. The
+   implementation here is a transparent direct `O(N^3)` census rather than the
+   paper's sparse subquadratic algorithm.
 
-> Y. Hu, J. Trousdale, K. Josić, and E. Shea-Brown,
-> *Local paths to global coherence: Cutting networks down to size*,
-> Physical Review E 89, 032802 (2014).
-> DOI: 10.1103/PhysRevE.89.032802
+## Literature-to-code map
 
-> R. Milo et al., *Network motifs: Simple building blocks of complex
-> networks*, Science 298, 824-827 (2002).
-> DOI: 10.1126/science.298.5594.824
+This repository is an independent implementation. A literature link identifies
+the mathematical definition or scientific framework behind a calculation; it
+does **not** mean that source code was copied from the paper.
+
+The relationship labels used below are:
+
+- **Direct formula:** the code evaluates a displayed moment, cumulant,
+  projector, recurrence, count, or transfer-function formula from the cited
+  work.
+- **Derived specialization:** the code follows algebraically from the cited
+  model after specifying a node filter or state-space realization, but is not
+  presented as a separately named algorithm in the paper.
+- **Package-defined helper:** the quantity was added for practical comparison
+  and is explicitly not claimed as a formula introduced by the cited paper.
+
+| Calculation or public API | Implementation | Validation | Primary literature | Relationship to the literature |
+|---|---|---|---|---|
+| Chain moments and cumulants: `chain_motif_moments`, `chain_motif_cumulants` | [`motif_cumulants/chain.py`](motif_cumulants/chain.py) | [`tests/test_chain.py`](tests/test_chain.py) | [Hu et al. (2018)](https://doi.org/10.1103/PhysRevE.98.062312) | **Direct formula.** Implements normalized path moments, the ordered-composition recurrence, and the projector expression for chain cumulants. |
+| PRE closed-walk cycle moments and cumulants: `cycle_motif_*` | [`motif_cumulants/cycle.py`](motif_cumulants/cycle.py) | [`tests/test_cycle.py`](tests/test_cycle.py) | [Hu et al. (2018)](https://doi.org/10.1103/PhysRevE.98.062312) | **Direct formula.** Implements the one-index closed-walk cycle family and its decomposition into a cycle cumulant plus terms generated by chain cumulants. |
+| Motif transfer function and cutoff-time approximations: `network_cutoff_time`, `motif_cutoff_times_*`, `paper_cutoff_time_constant` | [`motif_cumulants/timescale.py`](motif_cumulants/timescale.py) | [`tests/test_timescale.py`](tests/test_timescale.py), [`tests/test_timescale_helpers.py`](tests/test_timescale_helpers.py) | [Hu et al. (2018), especially Theorem V.1](https://ar5iv.labs.arxiv.org/html/1605.09073) | **Direct formula** for the resolvent and motif cutoff-time expansion. |
+| Exponential-node poles and impulse response: `exponential_network_timescales`, `exponential_impulse_response` | [`motif_cumulants/timescale.py`](motif_cumulants/timescale.py) | [`tests/test_timescale.py`](tests/test_timescale.py) | [Hu et al. (2018)](https://doi.org/10.1103/PhysRevE.98.062312) plus standard linear-systems identities | **Derived specialization.** Substitutes `h(s)=1/(s+1/tau_node)` into the paper's network model and evaluates the resulting state-space poles and impulse response. |
+| Input/readout-specific chain cumulants: `generalized_chain_motif_*`, `input_output_chain_motif_*`, `weighted_chain_motif_*` | [`motif_cumulants/generalized.py`](motif_cumulants/generalized.py), [`motif_cumulants/weighted.py`](motif_cumulants/weighted.py) | [`tests/test_generalized.py`](tests/test_generalized.py), [`tests/test_weighted_aliases.py`](tests/test_weighted_aliases.py) | [Hu et al. (2018), Supplementary Eqs. S41-S42](https://doi.org/10.1103/PhysRevE.98.062312) | **Direct formula.** Implements the oblique projector for arbitrary deterministic input `B` and readout `C`; `weighted.py` only provides aliases. |
+| Divergent and convergent path-pair cumulants: `divergent_motif_*`, `convergent_motif_*` | [`motif_cumulants/branching.py`](motif_cumulants/branching.py) | [`tests/test_branching.py`](tests/test_branching.py) | [Recanatesi et al. (2019)](https://doi.org/10.1371/journal.pcbi.1006446), [S1 supplement](https://doi.org/10.1371/journal.pcbi.1006446.s001), building on [Hu et al. (2014)](https://doi.org/10.1103/PhysRevE.89.032802) | **Direct formula.** Computes two paths sharing a source or target, including the projector that removes reducible lower-order contributions. |
+| PLOS mixed-trace path-pair cumulants: `mixed_trace_motif_*`, `trace_motif_*` | [`motif_cumulants/mixed_trace.py`](motif_cumulants/mixed_trace.py), aliases in [`motif_cumulants/covariance_motifs.py`](motif_cumulants/covariance_motifs.py) | [`tests/test_mixed_trace.py`](tests/test_mixed_trace.py), [`tests/test_covariance_motifs.py`](tests/test_covariance_motifs.py) | [Recanatesi et al. (2019)](https://doi.org/10.1371/journal.pcbi.1006446), [S1 supplement](https://doi.org/10.1371/journal.pcbi.1006446.s001) | **Direct formula.** Implements the two-index `Tr(W^n (W^T)^m)` family. It is deliberately separate from the one-index PRE cycle family. |
+| Unified covariance-motif result: `covariance_motif_cumulants` | [`motif_cumulants/covariance_motifs.py`](motif_cumulants/covariance_motifs.py) | [`tests/test_covariance_motifs.py`](tests/test_covariance_motifs.py) | [Recanatesi et al. (2019)](https://doi.org/10.1371/journal.pcbi.1006446) | **Package integration of direct formulas.** The wrapper returns the chain, divergent, convergent, and mixed-trace families used together in the paper; it does not by itself predict covariance or dimensionality without a dynamical/noise model. |
+| Weighted second-order walk profile: `second_order_motif_statistics` | [`motif_cumulants/second_order.py`](motif_cumulants/second_order.py) | [`tests/test_second_order.py`](tests/test_second_order.py) | [Hu et al. (2018)](https://doi.org/10.1103/PhysRevE.98.062312) and [Zhao et al. (2011)](https://doi.org/10.3389/fncom.2011.00028) | **Package-defined convenience profile.** Uses matrix expressions and the package's `N` normalization, allows repeated indices, and should not be confused with exact finite-size SONET counts. |
+| Exact finite-size SONET statistics: `sonet_motif_statistics` | [`motif_cumulants/second_order.py`](motif_cumulants/second_order.py) | [`tests/test_sonet.py`](tests/test_sonet.py) | [Zhao et al. (2011), Fig. 1 and connectivity-statistics methods](https://doi.org/10.3389/fncom.2011.00028) | **Direct count/statistic implementation.** Counts reciprocal, convergent, divergent, and chain motifs on distinct node positions and reports their deviation from the independent-edge baseline. |
+| Population-resolved chain/divergent/convergent cumulants: `population_motif_cumulants` and specialized APIs | [`motif_cumulants/population.py`](motif_cumulants/population.py) | [`tests/test_population.py`](tests/test_population.py) | [Hu et al. (2014)](https://doi.org/10.1103/PhysRevE.89.032802) | **Direct framework adaptation.** Implements block projectors and block-averaged path statistics so known populations are not collapsed into one scalar. |
+| Exact 16-class induced directed-triad census: `directed_triad_census`, `triad_census` | [`motif_cumulants/triads.py`](motif_cumulants/triads.py) | [`tests/test_triads.py`](tests/test_triads.py) | [Batagelj and Mrvar (2001)](https://doi.org/10.1016/S0378-8733%2801%2900035-1); motif interpretation from [Milo et al. (2002)](https://doi.org/10.1126/science.298.5594.824) | **Standard census, independent implementation.** Uses the standard 16 class names but directly enumerates node triples; it does not implement Batagelj and Mrvar's sparse algorithm. |
+| Null networks and triad enrichment: `density_matched_null`, `directed_degree_preserving_null`, `block_density_matched_null`, `triad_enrichment` | [`motif_cumulants/null_models.py`](motif_cumulants/null_models.py) | [`tests/test_null_models.py`](tests/test_null_models.py), [`tests/test_null_model_primitives.py`](tests/test_null_model_primitives.py), [`tests/test_null_models_extended.py`](tests/test_null_models_extended.py) | Motif-enrichment rationale from [Milo et al. (2002)](https://doi.org/10.1126/science.298.5594.824); second-order context from [Zhao et al. (2011)](https://doi.org/10.3389/fncom.2011.00028) | **Independent null-model utilities.** They implement common constraints and empirical z-scores; the exact randomization code is package code rather than a reproduction of one paper's software. |
+| W-only standardized structural timescale: `structural_timescale_curve` | [`motif_cumulants/timescale.py`](motif_cumulants/timescale.py) | [`tests/test_timescale_helpers.py`](tests/test_timescale_helpers.py) | Inspired by the resolvent and stability scaling in [Hu et al. (2018)](https://doi.org/10.1103/PhysRevE.98.062312) | **Package-defined helper.** The fixed-fraction-of-threshold ratio is useful for comparing unscaled adjacency matrices but is not a physical time constant introduced in the paper. |
 
 The adjacency convention is
 
@@ -69,14 +113,8 @@ The equivalent dynamics extra is also available:
 python -m pip install ".[dynamics]"
 ```
 
-To install the optional validation dependencies used by the complete test
-suite:
-
-```bash
-python -m pip install ".[test]"
-```
-
-For development and validation dependencies:
+To install the optional development and validation dependencies used by
+the complete test suite:
 
 ```bash
 python -m pip install ".[test]"
@@ -93,6 +131,13 @@ Theta = I - e e^T.
 
 ### Chain motifs
 
+**Code and literature.** [`chain.py`](motif_cumulants/chain.py) implements the
+chain moment, ordered-composition recurrence, and projector cumulant from
+[Hu et al. (2018)](https://doi.org/10.1103/PhysRevE.98.062312). See
+[`test_chain.py`](tests/test_chain.py) for independent matrix-power and
+low-order identity checks.
+
+
 The order-`n` chain moment and cumulant are
 
 ```text
@@ -108,6 +153,13 @@ kappa_chain_n = mu_chain_n
 ```
 
 ### Cycle motifs
+
+**Code and literature.** [`cycle.py`](motif_cumulants/cycle.py) implements the
+one-index PRE closed-walk cycle family from
+[Hu et al. (2018)](https://doi.org/10.1103/PhysRevE.98.062312). See
+[`test_cycle.py`](tests/test_cycle.py). This is not the PLOS two-index mixed
+trace family implemented later in the package.
+
 
 The order-`n` cycle moment and cumulant are
 
@@ -132,6 +184,15 @@ These formulas count weighted directed walks. For example, `trace(W^n)` counts
 closed walks and does not require all nodes or edges in a walk to be distinct.
 
 ### Divergent motifs
+
+**Code and literature.** [`branching.py`](motif_cumulants/branching.py)
+implements the path-pair projector formulas used in the covariance expansion
+of [Recanatesi et al. (2019)](https://doi.org/10.1371/journal.pcbi.1006446)
+and its [S1 supplement](https://doi.org/10.1371/journal.pcbi.1006446.s001),
+building on the motif-cumulant framework of
+[Hu et al. (2014)](https://doi.org/10.1103/PhysRevE.89.032802). See
+[`test_branching.py`](tests/test_branching.py).
+
 
 A divergent `(n, m)` motif contains two paths of lengths `n` and `m` leaving a
 common source. With `A = W/N`, its moment is
@@ -166,6 +227,13 @@ number of edges is available as `divergent["total_order"]`.
 
 ### Convergent motifs
 
+**Code and literature.** Convergent and divergent calculations share
+[`branching.py`](motif_cumulants/branching.py) and the same
+[Recanatesi et al. (2019)](https://doi.org/10.1371/journal.pcbi.1006446)
+path-pair formalism. The difference is whether the two branches share their
+target or source.
+
+
 A convergent `(n, m)` motif contains two paths arriving at a common target:
 
 ```text
@@ -186,6 +254,15 @@ At `(1, 1)`, divergent motifs quantify excess shared output from a source,
 while convergent motifs quantify excess shared input to a target.
 
 ### Mixed trace motifs
+
+**Code and literature.** [`mixed_trace.py`](motif_cumulants/mixed_trace.py)
+implements the two-index trace moments and cumulants in
+[Recanatesi et al. (2019)](https://doi.org/10.1371/journal.pcbi.1006446) and
+the [S1 supplement](https://doi.org/10.1371/journal.pcbi.1006446.s001). See
+[`test_mixed_trace.py`](tests/test_mixed_trace.py). The `(2, 1)`
+feed-forward-loop interpretation is a consequence of the path-pair moment; it
+is not an induced three-node triad count.
+
 
 A mixed trace `(n, m)` motif consists of two paths with the same ordered
 starting and ending nodes. The paper-normalized moment is
@@ -226,6 +303,15 @@ sparse matrix operations.
 
 ### Weighted walk-based second-order profile
 
+**Code and literature.**
+[`second_order_motif_statistics`](motif_cumulants/second_order.py) is a
+package convenience function connecting the matrix/walk normalization used by
+[Hu et al. (2018)](https://doi.org/10.1103/PhysRevE.98.062312) with the four
+second-order motif names emphasized by
+[Zhao et al. (2011)](https://doi.org/10.3389/fncom.2011.00028). Because it
+allows repeated indices, it is not the exact finite-size SONET estimator.
+
+
 The weighted walk-based second-order profile consists of chain, divergent,
 convergent, and reciprocal matrix statistics. The function below returns their
 raw moments and independent-edge excesses relative to `p^2`. Repeated node
@@ -256,6 +342,14 @@ cycle cumulant from Hu et al. The result therefore also reports
 `cycle_order_2_cumulant` explicitly.
 
 ### Exact finite-size SONET counts
+
+**Code and literature.**
+[`sonet_motif_statistics`](motif_cumulants/second_order.py) implements the
+distinct-node reciprocal, convergent, divergent, and chain statistics defined
+by [Zhao et al. (2011)](https://doi.org/10.3389/fncom.2011.00028). See
+[`test_sonet.py`](tests/test_sonet.py), which compares the optimized formulas
+with brute-force enumeration.
+
 
 `second_order_motif_statistics` uses the package's weighted walk
 normalization and permits repeated indices. For an exact loop-free binary
@@ -296,6 +390,14 @@ retained by `edge_presence="nonzero"`; use `"positive"` to ignore it.
 
 ### Unified covariance-motif interface
 
+**Code and literature.**
+[`covariance_motifs.py`](motif_cumulants/covariance_motifs.py) packages the
+chain, divergent, convergent, and mixed-trace structural quantities used
+together by [Recanatesi et al. (2019)](https://doi.org/10.1371/journal.pcbi.1006446).
+It is an integration layer rather than a new mathematical motif definition.
+See [`test_covariance_motifs.py`](tests/test_covariance_motifs.py).
+
+
 The PLOS covariance expansion uses chain, divergent, convergent, and mixed
 trace families together. They can be calculated in one call:
 
@@ -323,6 +425,14 @@ or noise covariance.
 
 ### Input/readout-specific chain cumulants
 
+**Code and literature.** [`generalized.py`](motif_cumulants/generalized.py)
+implements the arbitrary-`B`, arbitrary-`C` construction in Supplementary
+Eqs. S41-S42 of
+[Hu et al. (2018)](https://doi.org/10.1103/PhysRevE.98.062312).
+[`weighted.py`](motif_cumulants/weighted.py) only supplies user-facing aliases.
+See [`test_generalized.py`](tests/test_generalized.py).
+
+
 Uniform averaging can hide which paths are relevant to an experiment. The
 PRE supplementary construction for arbitrary input `B` and readout `C` is
 available through:
@@ -348,6 +458,13 @@ accept a nonuniform `weights=` vector and normalize it internally.
 
 ### Population-resolved cumulants
 
+**Code and literature.** [`population.py`](motif_cumulants/population.py)
+implements block-projector and block-averaged motif calculations based on the
+network-partition framework of
+[Hu et al. (2014)](https://doi.org/10.1103/PhysRevE.89.032802). See
+[`test_population.py`](tests/test_population.py).
+
+
 Known node classes can be retained rather than collapsed into one scalar:
 
 ```python
@@ -364,8 +481,8 @@ print(population["cumulants"]["convergent"])
 
 For chain motifs, `cumulants[n-1, target_group, source_group]` records the
 order-`n` contribution from the source population to the target population.
-The implementation uses the block projector described by Hu et al. (2014),
-DOI `10.1103/PhysRevE.89.032802`.
+The implementation uses the block projector described by
+[Hu et al. (2014)](https://doi.org/10.1103/PhysRevE.89.032802).
 
 ### Motif cumulants versus induced-subgraph motifs
 
@@ -379,6 +496,15 @@ not be substituted directly into the transfer-function or covariance
 resummation formulas.
 
 ### Exact induced directed triads
+
+**Code and literature.** [`triads.py`](motif_cumulants/triads.py) uses the
+standard 16-class directed triad vocabulary associated with triad-census work
+such as [Batagelj and Mrvar (2001)](https://doi.org/10.1016/S0378-8733%2801%2900035-1).
+Its scientific interpretation as a motif requires a null-ensemble comparison,
+following [Milo et al. (2002)](https://doi.org/10.1126/science.298.5594.824).
+The code directly enumerates triples rather than implementing the sparse
+Batagelj-Mrvar algorithm. See [`test_triads.py`](tests/test_triads.py).
+
 
 Each unordered set of three distinct nodes can be classified into one of the
 16 standard directed triads:
@@ -404,6 +530,17 @@ and all 16 counts sum to `choose(N, 3)`. Self-loops are ignored. The exact
 implementation is `O(N^3)`.
 
 ### Null-model enrichment
+
+**Code and literature.** [`null_models.py`](motif_cumulants/null_models.py)
+implements independent randomization utilities and empirical enrichment
+statistics. The scientific rationale for calling an overrepresented subgraph
+a network motif follows
+[Milo et al. (2002)](https://doi.org/10.1126/science.298.5594.824); the exact
+randomization routines here are package implementations, not copied paper
+software. Their invariants are checked in
+[`test_null_model_primitives.py`](tests/test_null_model_primitives.py) and
+[`test_null_models_extended.py`](tests/test_null_models_extended.py).
+
 
 A classical network motif is an excess or deficit relative to a specified null
 ensemble. The package provides:
@@ -503,6 +640,13 @@ The package represents a separate global recurrent scale with `coupling`. If
 
 ## Full-matrix frequency-cutoff time
 
+**Code and literature.** The resolvent calculation and cutoff-time definition
+are implemented in [`timescale.py`](motif_cumulants/timescale.py) from the
+transfer-function framework of
+[Hu et al. (2018)](https://doi.org/10.1103/PhysRevE.98.062312). See
+[`test_timescale.py`](tests/test_timescale.py).
+
+
 The paper defines a time constant from the intersection of the low-frequency
 Bode magnitude baseline and the high-frequency asymptote. Suppose
 
@@ -565,6 +709,12 @@ assumed high-frequency order. It does not by itself establish dynamic
 stability, because the rest of `h(s)` has not been specified.
 
 ## Time constant after each motif order
+
+**Code and literature.** `motif_cutoff_times_by_order` and
+`motif_cutoff_times_from_cumulants` implement Theorem V.1 of
+[Hu et al. (2018)](https://ar5iv.labs.arxiv.org/html/1605.09073), truncating
+the chain-cumulant feedback series at each requested order.
+
 
 Theorem V.1 gives the order-`K` chain-cumulant approximation
 
@@ -631,6 +781,13 @@ The basic time-constant theorem uses **chain cumulants**. Cycle cumulants should
 not be inserted directly into this denominator.
 
 ## Exponential-node dynamics and stability
+
+**Code and literature.** The exponential-node functions in
+[`timescale.py`](motif_cumulants/timescale.py) are a **derived specialization**
+of the Hu et al. transfer model. The paper supplies the general filter-based
+resolvent; the package substitutes `h(s)=1/(s+1/tau_node)` and then applies
+standard state-space eigenvalue and matrix-exponential identities.
+
 
 For the exponential single-node filter
 
@@ -770,6 +927,13 @@ print(result["time_constants"])
 ```
 
 ### W-only standardized structural comparison
+
+**Code and literature status.** `structural_timescale_curve` is a
+**package-defined helper**, not a time-constant formula claimed by Hu et al.
+It uses the paper's resolvent viewpoint to compare adjacency matrices at the
+same chosen fraction of their spectral threshold when physical units are not
+available.
+
 
 When the physical recurrent scale and node time are unknown, an absolute time
 in seconds cannot be recovered. For a **nonnegative** matrix, the package can
