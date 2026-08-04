@@ -1,6 +1,14 @@
 """Motif cumulants, classical motifs, null models, and network responses."""
 
 from ._binary import EdgePresence
+from .bipartite_triads import (
+    ONE_WAY_BIPARTITE_TRIAD_NAMES,
+    BipartiteTriadEnrichmentResult,
+    OneWayBipartiteRatioResult,
+    bipartite_triad_enrichment,
+    lift_bipartite_adjacency,
+    one_way_bipartite_triplet_ratios,
+)
 from .branching import (
     BranchingMotifResult,
     convergent_motif_cumulants,
@@ -59,6 +67,15 @@ from .population import (
     population_chain_motif_cumulants,
     population_motif_cumulants,
 )
+from .probabilistic_triads import (
+    UDVARY_TRIPLET_MOTIF_NAMES,
+    DoubletBaseline,
+    TripletMotifProbabilityResult,
+    triplet_motif_class_probabilities,
+    triplet_motif_probability_ratios,
+    triplet_motif_probability_ratios_from_edge_probabilities,
+    udvary_triplet_motif_probability_ratios,
+)
 from .second_order import (
     SECOND_ORDER_MOTIF_NAMES,
     SONETMotifResult,
@@ -96,11 +113,13 @@ from .weighted import (
 )
 
 __all__ = [
+    "BipartiteTriadEnrichmentResult",
     "BranchingMotifResult",
     "ChainMotifResult",
     "CovarianceMotifResult",
     "CycleMotifResult",
     "DirectedTriadCensusResult",
+    "DoubletBaseline",
     "EdgePresence",
     "EdgeRule",
     "ExponentialTimescaleResult",
@@ -111,6 +130,8 @@ __all__ = [
     "NetworkCutoffResult",
     "NullModel",
     "NullModelName",
+    "ONE_WAY_BIPARTITE_TRIAD_NAMES",
+    "OneWayBipartiteRatioResult",
     "PopulationBranchingKind",
     "PopulationBranchingMotifResult",
     "PopulationChainMotifResult",
@@ -122,6 +143,9 @@ __all__ = [
     "TRIAD_NAMES",
     "TraceNormalization",
     "TriadEnrichmentResult",
+    "TripletMotifProbabilityResult",
+    "UDVARY_TRIPLET_MOTIF_NAMES",
+    "bipartite_triad_enrichment",
     "block_density_matched_null",
     "chain_cumulants_from_moments",
     "chain_motif_cumulants",
@@ -145,11 +169,13 @@ __all__ = [
     "generalized_chain_motif_moments",
     "input_output_chain_motif_cumulants",
     "input_output_chain_motif_moments",
+    "lift_bipartite_adjacency",
     "mixed_trace_motif_cumulants",
     "mixed_trace_motif_moments",
     "motif_cutoff_times_by_order",
     "motif_cutoff_times_from_cumulants",
     "network_cutoff_time",
+    "one_way_bipartite_triplet_ratios",
     "paper_cutoff_time_constant",
     "population_branching_motif_cumulants",
     "population_chain_motif_cumulants",
@@ -164,8 +190,12 @@ __all__ = [
     "triad_census",
     "triad_enrichment",
     "triad_motif_enrichment",
+    "triplet_motif_class_probabilities",
+    "triplet_motif_probability_ratios",
+    "triplet_motif_probability_ratios_from_edge_probabilities",
+    "udvary_triplet_motif_probability_ratios",
     "weighted_chain_motif_cumulants",
     "weighted_chain_motif_moments",
 ]
 
-__version__ = "0.6.0"
+__version__ = "0.8.0"

@@ -16,7 +16,7 @@ class PublicAPITests(unittest.TestCase):
         self.assertEqual(missing, [])
 
     def test_version_matches_current_feature_release(self) -> None:
-        self.assertEqual(motif_cumulants.__version__, "0.6.0")
+        self.assertEqual(motif_cumulants.__version__, "0.8.0")
 
 
 if __name__ == "__main__":

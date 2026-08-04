@@ -5,16 +5,18 @@ levels:
 
 1. **Analytic weighted-walk cumulants**: chain, PRE closed-walk cycle,
    divergent, convergent, and PLOS mixed-trace families.
-2. **Classical finite-node motifs**: exact SONET second-order counts and the
-   16-class induced directed-triad census.
+2. **Finite-node directed motifs**: exact SONET and induced-triad counts,
+   expected triplet-motif probabilities from a connection-probability matrix,
+   and observed-to-random triad ratios for one-way rectangular networks.
 3. **Functional and comparative analyses**: null-model enrichment,
    input/readout-weighted and population-resolved cumulants, and motif-based
    network response times.
 
 The implementation keeps these definitions separate because a weighted walk,
-an induced subgraph, and a motif enrichment z-score are not interchangeable.
+an observed induced subgraph, an ensemble-averaged motif probability, and a
+motif enrichment z-score are not interchangeable.
 
-Current package version: **0.6.0**.
+Current package version: **0.8.0**.
 
 ## Primary literature
 
@@ -49,6 +51,18 @@ or scientific analyses used by this package.
    This is a standard reference for the 16-class directed triad census. The
    implementation here is a transparent direct `O(N^3)` census rather than the
    paper's sparse subquadratic algorithm.
+7. **Udvary et al. (2022), probability-based triplet motifs.**
+   [Cell Reports article](https://doi.org/10.1016/j.celrep.2022.110677).
+   This is the source for averaging the occurrence probability of each of 15
+   nonempty directed triplet motifs over sampled neuron triplets and dividing
+   by a random-network probability constructed from mean pairwise connection
+   probabilities (Fig. 3E and STAR Methods).
+8. **Song et al. (2005), doublet-normalized triplet motifs.**
+   [PLOS Biology article](https://doi.org/10.1371/journal.pbio.0030068).
+   This is the source for the null in which the three constituent doublets are
+   combined independently while preserving absent, unidirectional, and
+   reciprocal doublet frequencies. Udvary et al. use this normalization for
+   their empirical L5PT comparison (Fig. 6E in the published PDF).
 
 ## Literature-to-code map
 
@@ -81,6 +95,8 @@ The relationship labels used below are:
 | Exact finite-size SONET statistics: `sonet_motif_statistics` | [`motif_cumulants/second_order.py`](motif_cumulants/second_order.py) | [`tests/test_sonet.py`](tests/test_sonet.py) | [Zhao et al. (2011), Fig. 1 and connectivity-statistics methods](https://doi.org/10.3389/fncom.2011.00028) | **Direct count/statistic implementation.** Counts reciprocal, convergent, divergent, and chain motifs on distinct node positions and reports their deviation from the independent-edge baseline. |
 | Population-resolved chain/divergent/convergent cumulants: `population_motif_cumulants` and specialized APIs | [`motif_cumulants/population.py`](motif_cumulants/population.py) | [`tests/test_population.py`](tests/test_population.py) | [Hu et al. (2014)](https://doi.org/10.1103/PhysRevE.89.032802) | **Direct framework adaptation.** Implements block projectors and block-averaged path statistics so known populations are not collapsed into one scalar. |
 | Exact 16-class induced directed-triad census: `directed_triad_census`, `triad_census` | [`motif_cumulants/triads.py`](motif_cumulants/triads.py) | [`tests/test_triads.py`](tests/test_triads.py) | [Batagelj and Mrvar (2001)](https://doi.org/10.1016/S0378-8733%2801%2900035-1); motif interpretation from [Milo et al. (2002)](https://doi.org/10.1126/science.298.5594.824) | **Standard census, independent implementation.** Uses the standard 16 class names but directly enumerates node triples; it does not implement Batagelj and Mrvar's sparse algorithm. |
+| Expected triplet-motif probabilities and random-network ratios: `triplet_motif_class_probabilities`, `triplet_motif_probability_ratios`, `udvary_triplet_motif_probability_ratios` | [`motif_cumulants/probabilistic_triads.py`](motif_cumulants/probabilistic_triads.py) | [`tests/test_probabilistic_triads.py`](tests/test_probabilistic_triads.py) | [Udvary et al. (2022), Fig. 3E and STAR Methods](https://doi.org/10.1016/j.celrep.2022.110677); doublet-preserving comparison from [Song et al. (2005), Fig. 4](https://doi.org/10.1371/journal.pbio.0030068) and Udvary et al. Fig. 6E | **Direct probability calculation.** Sums the 64 labeled independent-Bernoulli edge patterns into the 16 standard triad classes, averages over sampled triplets, and compares with independent-edge and independent-dyad baselines. This expects a matrix of connection probabilities, not one realized adjacency matrix. |
+| One-way bipartite triad enrichment: `lift_bipartite_adjacency`, `bipartite_triad_enrichment`, `one_way_bipartite_triplet_ratios` | [`motif_cumulants/bipartite_triads.py`](motif_cumulants/bipartite_triads.py) | [`tests/test_bipartite_triads.py`](tests/test_bipartite_triads.py) | Enrichment rationale from [Milo et al. (2002)](https://doi.org/10.1126/science.298.5594.824) | **Package-defined analysis layer.** Lifts a rectangular source-to-target matrix into a square block adjacency matrix and reuses the existing triad census and block density-matched null. It adds no new motif definition; the analytical wedge formulas are standard degree identities. |
 | Null networks and triad enrichment: `density_matched_null`, `directed_degree_preserving_null`, `block_density_matched_null`, `triad_enrichment` | [`motif_cumulants/null_models.py`](motif_cumulants/null_models.py) | [`tests/test_null_models.py`](tests/test_null_models.py), [`tests/test_null_model_primitives.py`](tests/test_null_model_primitives.py), [`tests/test_null_models_extended.py`](tests/test_null_models_extended.py) | Motif-enrichment rationale from [Milo et al. (2002)](https://doi.org/10.1126/science.298.5594.824); second-order context from [Zhao et al. (2011)](https://doi.org/10.3389/fncom.2011.00028) | **Independent null-model utilities.** They implement common constraints and empirical z-scores; the exact randomization code is package code rather than a reproduction of one paper's software. |
 | W-only standardized structural timescale: `structural_timescale_curve` | [`motif_cumulants/timescale.py`](motif_cumulants/timescale.py) | [`tests/test_timescale_helpers.py`](tests/test_timescale_helpers.py) | Inspired by the resolvent and stability scaling in [Hu et al. (2018)](https://doi.org/10.1103/PhysRevE.98.062312) | **Package-defined helper.** The fixed-fraction-of-threshold ratio is useful for comparing unscaled adjacency matrices but is not a physical time constant introduced in the paper. |
 
@@ -529,6 +545,151 @@ The census is induced: absent edges inside the selected three-node set matter,
 and all 16 counts sum to `choose(N, 3)`. Self-loops are ignored. The exact
 implementation is `O(N^3)`.
 
+### Probability-based triplet motifs relative to random networks
+
+**Code and literature.**
+[`probabilistic_triads.py`](motif_cumulants/probabilistic_triads.py)
+implements the analysis used by
+[Udvary et al. (2022)](https://doi.org/10.1016/j.celrep.2022.110677).
+The direct 15-motif/random-network panel is Fig. 3E in the published paper.
+The later L5PT comparison is Fig. 6E and additionally uses the doublet
+normalization introduced by
+[Song et al. (2005)](https://doi.org/10.1371/journal.pbio.0030068).
+Both calculations are returned by the same function. The implementation was
+also checked against the authors' released
+[`eval_motifs.py`](https://github.com/zibneuro/udvary-et-al-2022/blob/master/structural_model/eval_motifs.py)
+and
+[`visualize_L5PTTripletMotifs.m`](https://github.com/zibneuro/udvary-et-al-2022/blob/master/analysis/visualization/visualize_L5PTTripletMotifs.m)
+scripts.
+
+This API expects a connection-probability matrix `P`, with
+
+```text
+P[target, source] = probability of source -> target,
+```
+
+rather than a realized binary adjacency matrix. For one ordered triplet, let
+
+```text
+p = [p(0->1), p(1->0), p(0->2), p(2->0), p(1->2), p(2->1)].
+```
+
+For a labeled six-edge pattern `x`, the induced-pattern probability is
+
+```text
+product_e p[e]^x[e] (1 - p[e])^(1 - x[e]).
+```
+
+The code evaluates all 64 labeled patterns and sums them into the standard
+triad isomorphism classes. The paper plots the 15 nonempty classes in this
+order:
+
+```text
+300, 210, 120U, 120D, 120C, 030T, 030C, 201,
+111U, 111D, 021U, 021D, 021C, 102, 012.
+```
+
+Use exact enumeration for a small matrix:
+
+```python
+from motif_cumulants import triplet_motif_probability_ratios
+
+result = triplet_motif_probability_ratios(P)
+
+print(result["triad"])
+print(result["model_probability"])
+print(result["relative_to_independent_edges"])
+print(result["doublet_normalized_ratio"])
+```
+
+The two ratios answer different questions:
+
+- `relative_to_independent_edges` reproduces the Fig. 3E-style comparison.
+  The six directed edge probabilities are replaced by their respective means
+  across sampled triplets, the 15 motif probabilities are recomputed, and the
+  model probabilities are divided by those random-network probabilities.
+- `doublet_normalized_ratio` is the Song/Fig. 6E-style comparison. It preserves
+  the predicted frequencies of absent, one-way, and reciprocal doublets, then
+  combines the three doublets independently. This removes triplet enrichment
+  already explained by nonrandom doublet statistics.
+
+For a large network, sample triplets without storing all per-triplet motif
+probabilities:
+
+```python
+result = triplet_motif_probability_ratios(
+    P,
+    sample_size=8_000_000,
+    random_state=0,
+    chunk_size=50_000,
+)
+```
+
+This provides the same scalable Monte Carlo pattern as the paper's
+eight-million-triplet analysis, using uniform unordered three-node sets with
+replacement. To reproduce a particular paper-style A/B/C population sampling
+scheme exactly, construct those ordered triplets explicitly and pass them via
+`triplets=`. `model_probability_standard_error` is the across-triplet standard
+error. Under Monte Carlo sampling it quantifies triplet-sampling uncertainty;
+under exact enumeration it describes heterogeneity across the finite set of
+triplets, not uncertainty in the exactly enumerated mean.
+
+When the six probabilities are assembled from separate rectangular
+population-to-population matrices rather than one global square matrix, use the
+shape-independent entry point:
+
+```python
+from motif_cumulants import (
+    triplet_motif_probability_ratios_from_edge_probabilities,
+)
+
+# Rows: 0->1, 1->0, 0->2, 2->0, 1->2, 2->1.
+result = triplet_motif_probability_ratios_from_edge_probabilities(
+    edge_probability_rows,  # shape (n_triplets, 6)
+    doublet_baseline="position_specific",
+)
+```
+
+This produces the same model and null probabilities as the square-matrix
+wrapper, but does not assume that the three roles are indices of one square
+adjacency matrix.
+
+For cell-type-specific analyses, pass explicitly ordered triplets so positions
+0, 1, and 2 retain their biological roles:
+
+```python
+result = triplet_motif_probability_ratios(
+    P,
+    triplets=ordered_triplets,       # shape (n_triplets, 3)
+    doublet_baseline="position_specific",
+)
+```
+
+The default `doublet_baseline="pooled"` mirrors the homogeneous L5PT analysis
+of Song et al.: doublet states are pooled across the three node-pair positions,
+and the two one-way directions share the pooled unidirectional probability.
+Use `"position_specific"` when the three positions represent different cell
+types and their directed pair statistics should remain distinct.
+
+For six probabilities already extracted from a triplet, the lower-level helper
+returns its class-probability vector directly:
+
+```python
+from motif_cumulants import triplet_motif_class_probabilities
+
+probabilities = triplet_motif_class_probabilities(
+    [0.1, 0.2, 0.4, 0.3, 0.6, 0.5],
+    include_empty=True,
+)
+assert abs(probabilities.sum() - 1.0) < 1e-12
+```
+
+Do not substitute this function for `directed_triad_census` or
+`triad_enrichment`. Those functions analyze an observed topology; this one
+computes expected motif occurrences from an ensemble of edge probabilities.
+See [`test_probabilistic_triads.py`](tests/test_probabilistic_triads.py) for
+brute-force 64-pattern checks and random-baseline identities.
+
 ### Null-model enrichment
 
 **Code and literature.** [`null_models.py`](motif_cumulants/null_models.py)
@@ -585,6 +746,137 @@ that a constrained graph admitted fewer valid swaps than requested; increase
 `max_tries`, lower `n_swaps`, or inspect whether the degree sequence is nearly
 rigid. Null-model choice is part of the scientific hypothesis, not merely a
 computational setting.
+
+### One-way rectangular (bipartite) networks
+
+**Code and literature.**
+[`bipartite_triads.py`](motif_cumulants/bipartite_triads.py) is a
+**package-defined analysis layer**. It combines the induced triad census with
+the block-constrained null already provided by
+[`null_models.py`](motif_cumulants/null_models.py), following the
+enrichment rationale of
+[Milo et al. (2002)](https://doi.org/10.1126/science.298.5594.824). It does not
+introduce a new motif definition. See
+[`test_bipartite_triads.py`](tests/test_bipartite_triads.py).
+
+A rectangular binary matrix records connections from one population of source
+nodes to a separate population of target nodes. Because the entries are
+realized binary observations rather than probabilities, the natural quantity is
+an observed-to-random occurrence ratio
+
+```text
+R_M = observed_count[M] / mean_random_count[M],
+```
+
+not the motif likelihood computed by `triplet_motif_probability_ratios`. The
+convention matches the rest of the package:
+
+```text
+forward[target, source] = 1   means   source -> target.
+```
+
+Each rectangular network is lifted into a square block adjacency matrix
+
+```text
+[ 0        0 ]
+[ forward  0 ]
+```
+
+with nodes ordered `[source nodes, target nodes]`, and compared with the
+block density-matched null. The block constraint is essential: an
+unconstrained null would fabricate impossible source-to-source and
+target-to-target edges.
+
+```python
+from motif_cumulants import bipartite_triad_enrichment
+
+result = bipartite_triad_enrichment(W1, n_random=500, random_state=0)
+
+print(result["triad"])
+print(result["relative_occurrence"])
+print(result["z_score"])
+print(result["empirical_p_two_sided"])
+```
+
+Because the network is bipartite and one-directional, only four induced triad
+classes can occur:
+
+```text
+003    the empty triple
+012    one source-to-target edge
+021D   one source projecting to two targets (divergent)
+021U   two sources projecting to one target (convergent)
+```
+
+Every other class requires a reverse or within-population edge. Those classes
+report `NaN` ratios, and the Boolean `structurally_possible` mask marks the
+finite entries. These are exactly the classes verified by exhaustive
+enumeration in the test suite.
+
+All-source and all-target triples are empty by construction, so they are
+removed from the `003` count to give the `mixed_*` fields, which refer only to
+triples spanning both populations. That correction is a deterministic constant
+shared by the observed census and every randomization, so `z_score`,
+`null_std`, and the empirical p-values are unaffected by it.
+
+To compare two separate one-way networks, analyze each against its own
+baseline and display the ratios side by side:
+
+```python
+result_1 = bipartite_triad_enrichment(W1, n_random=2000, random_state=1)
+result_2 = bipartite_triad_enrichment(W2, n_random=2000, random_state=2)
+
+for motif, ratio_1, ratio_2 in zip(
+    result_1["triad"],
+    result_1["relative_occurrence"],
+    result_2["relative_occurrence"],
+):
+    if np.isfinite(ratio_1) or np.isfinite(ratio_2):
+        print(f"{motif:>5s}  {ratio_1:8.3f}  {ratio_2:8.3f}")
+```
+
+With `n_random=2000`, the smallest attainable empirical p-value is `1/2001`.
+Comparing two enrichment ratios side by side does **not** test whether the two
+networks differ significantly from each other; it reports how each differs
+from its own random baseline. A formal between-network test would require
+network replicates or an appropriate node/block bootstrap.
+
+#### Analytical Bernoulli baseline
+
+The triad census is `O((n_source + n_target)^3)` per randomization, so the
+sampled null becomes expensive quickly. For a one-way matrix the two wedge
+counts are determined exactly by the degree sequences,
+
+```text
+N_divergent  = sum_j choose(out_degree[j], 2)
+N_convergent = sum_i choose(in_degree[i], 2),
+```
+
+and under an independent Bernoulli null with the observed density `p`,
+
+```text
+E[N_divergent]  = n_source * choose(n_target, 2) * p^2
+E[N_convergent] = n_target * choose(n_source, 2) * p^2.
+```
+
+This needs no randomization at all:
+
+```python
+from motif_cumulants import one_way_bipartite_triplet_ratios
+
+profile = one_way_bipartite_triplet_ratios(W1)
+print(profile["divergent_ratio"], profile["convergent_ratio"])
+```
+
+The observed counts are exact and agree with `directed_triad_census`; only the
+null differs. The trade-off is that this route supplies no null variance,
+z-score, or p-value.
+
+Null-model choice matters here. The wedge counts are fully determined by the
+row and column degrees, so a degree-preserving null would fix them exactly and
+could report no enrichment. Use the density-matched or Bernoulli baseline to
+ask whether degree heterogeneity itself produces excess divergent or
+convergent triplets.
 
 ## Basic motif use
 
@@ -1020,6 +1312,13 @@ from motif_cumulants import (
     population_branching_motif_cumulants,
     population_motif_cumulants,
 
+    # Probability-based induced triplet motifs
+    UDVARY_TRIPLET_MOTIF_NAMES,
+    triplet_motif_class_probabilities,
+    triplet_motif_probability_ratios,
+    triplet_motif_probability_ratios_from_edge_probabilities,
+    udvary_triplet_motif_probability_ratios,
+
     # Distinct-node classical motifs and null ensembles
     classify_directed_triad,
     directed_triad_census,
@@ -1031,6 +1330,12 @@ from motif_cumulants import (
     triad_enrichment,
     randomize_directed_adjacency,
     triad_motif_enrichment,
+
+    # One-way rectangular (bipartite) networks
+    ONE_WAY_BIPARTITE_TRIAD_NAMES,
+    lift_bipartite_adjacency,
+    bipartite_triad_enrichment,
+    one_way_bipartite_triplet_ratios,
 
     # Network response and timescale calculations
     network_cutoff_time,
@@ -1048,6 +1353,8 @@ from motif_cumulants import (
 ```bash
 python examples/example_usage.py
 python examples/extended_motifs_usage.py
+python examples/bipartite_triplet_motifs.py
+python examples/probabilistic_triplet_motifs.py
 python examples/timescale_usage.py
 ```
 
@@ -1069,6 +1376,15 @@ The tests check the formulas rather than only exercising the API:
 - all 16 induced directed-triad classes are tested from canonical
   representatives, and random triad censuses are cross-checked against
   NetworkX when it is installed;
+- probability-based triplet motifs are checked against an independent
+  enumeration of all 64 labeled six-edge patterns, homogeneous random-network
+  identities, explicit doublet-preserving baselines, sparse/dense agreement,
+  and reproducible uniform triplet sampling;
+- one-way bipartite enrichment is checked by exhaustively enumerating small
+  rectangular networks to confirm that only `003`, `012`, `021D`, and `021U`
+  are realizable, by verifying that no randomization fabricates a
+  within-population edge, and by matching the analytical wedge formulas
+  against both the exact triad census and a Bernoulli simulation;
 - null generators are tested for their advertised invariants: total edge
   count, in/out-degree sequences, population-block counts, topology, and
   weight multisets;
