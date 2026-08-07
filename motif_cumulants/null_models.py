@@ -387,6 +387,7 @@ def triad_enrichment(
     n_swaps: Optional[int] = None,
     max_tries: Optional[int] = None,
     return_samples: bool = False,
+    sample_size: Optional[int] = None,
 ) -> TriadEnrichmentResult:
     """Compare an induced triad census with a randomized null ensemble.
 
@@ -394,6 +395,46 @@ def triad_enrichment(
     the sampled null count has zero variance. Empirical p-values use a
     two-sided deviation from the sampled null mean and the standard ``+1``
     finite-sample correction.
+
+    Parameters
+    ----------
+    W:
+        Square adjacency matrix (``W[i, j]`` = edge j → i).
+    n_random:
+        Number of null-model networks to generate.  Must be ≥ 2.
+    null_model:
+        ``'density'`` preserves the exact edge count; ``'degree'`` preserves
+        every node's binary in- and out-degree via directed double-edge swaps;
+        ``'block'`` preserves edge counts within every group × group block
+        (requires ``groups``).
+    groups:
+        Node group labels; required when ``null_model='block'``.
+    random_state:
+        Integer seed, ``numpy.random.Generator``, or ``None``.
+    edge_threshold:
+        Edges with ``|weight| ≤ edge_threshold`` are treated as absent.
+    edge_rule:
+        ``'absolute'`` uses ``|weight|``; ``'positive'`` uses ``weight``.
+    n_swaps:
+        Number of directed double-edge swaps for ``null_model='degree'``.
+        Defaults to ``10 × n_edges``.
+    max_tries:
+        Maximum swap attempts for ``null_model='degree'``.
+    return_samples:
+        If ``True``, include the raw ``(n_random, 16)`` null-count matrix as
+        ``null_samples`` in the result.
+    sample_size:
+        When given, :func:`directed_triad_census` uses Monte Carlo sampling of
+        this many random triples instead of exact O(N³) enumeration for every
+        census call (observed network and all ``n_random`` null networks).
+        Using the same ``sample_size`` for all calls keeps the z-scores
+        comparable.  ``None`` (default) uses exact enumeration.  A value
+        around 200 000 is sufficient for stable z-scores in networks of
+        N ~ 100–300 and avoids the multi-minute runtimes of the exact path.
+
+    Returns
+    -------
+    TriadEnrichmentResult
     """
     n_random = _validate_n_random(n_random)
     if null_model not in ("density", "degree", "block"):
@@ -402,15 +443,23 @@ def triad_enrichment(
         raise ValueError("groups are required for null_model='block'.")
     if not isinstance(return_samples, (bool, np.bool_)):
         raise TypeError("return_samples must be Boolean.")
+    if sample_size is not None and (
+        not isinstance(sample_size, int) or sample_size < 1
+    ):
+        raise ValueError("sample_size must be a positive integer or None.")
 
     threshold = _validate_threshold(edge_threshold)
     edge_rule = _validate_edge_rule(edge_rule)
     rng = _rng(random_state)
-    observed = directed_triad_census(
-        W,
+
+    _census_kwargs = dict(
         edge_threshold=threshold,
         edge_rule=edge_rule,
+        sample_size=sample_size,
+        random_state=rng,
     )
+
+    observed = directed_triad_census(W, **_census_kwargs)
     samples = np.empty((n_random, len(TRIAD_NAMES)), dtype=np.float64)
 
     for index in range(n_random):
@@ -438,7 +487,7 @@ def triad_enrichment(
                 edge_threshold=threshold,
                 edge_rule=edge_rule,
             )
-        samples[index] = directed_triad_census(randomized)["counts"]
+        samples[index] = directed_triad_census(randomized, **_census_kwargs)["counts"]
 
     null_mean = samples.mean(axis=0)
     null_std = samples.std(axis=0, ddof=1)
@@ -565,24 +614,40 @@ def triad_motif_enrichment(
     threshold: float = 0.0,
     edge_presence: str = "nonzero",
     return_null_counts: bool = False,
-) -> dict[str, Any]:
+    sample_size: Optional[int] = None,
+) -> dict:
     """Calculate classical triad enrichment under a named null ensemble.
 
     In addition to z-scores, this compatibility interface reports the unit-
     norm *triad significance profile* introduced in classical motif analysis.
     A zero vector is returned when all finite z-scores are zero.
+
+    Parameters
+    ----------
+    sample_size:
+        Passed to :func:`directed_triad_census` for Monte Carlo sampling.
+        ``None`` (default) uses exact O(N³) enumeration.  See
+        :func:`triad_enrichment` for details.
     """
     n_random = _validate_n_random(n_random)
     if not isinstance(return_null_counts, (bool, np.bool_)):
         raise TypeError("return_null_counts must be Boolean.")
+    if sample_size is not None and (
+        not isinstance(sample_size, int) or sample_size < 1
+    ):
+        raise ValueError("sample_size must be a positive integer or None.")
     threshold = _validate_threshold(threshold)
     _legacy_edge_rule(edge_presence)
     rng = _rng(random_state)
-    observed = directed_triad_census(
-        W,
+
+    _census_kwargs = dict(
         threshold=threshold,
         edge_presence=edge_presence,
+        sample_size=sample_size,
+        random_state=rng,
     )
+
+    observed = directed_triad_census(W, **_census_kwargs)
     null_counts = np.empty((n_random, len(TRIAD_NAMES)), dtype=np.float64)
     for index in range(n_random):
         randomized = randomize_directed_adjacency(
@@ -594,7 +659,7 @@ def triad_motif_enrichment(
             threshold=threshold,
             edge_presence=edge_presence,
         )
-        null_counts[index] = directed_triad_census(randomized)["counts"]
+        null_counts[index] = directed_triad_census(randomized, **_census_kwargs)["counts"]
 
     null_mean = null_counts.mean(axis=0)
     null_std = null_counts.std(axis=0, ddof=1)
