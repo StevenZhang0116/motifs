@@ -46,6 +46,10 @@ from .mixed_trace import (
     mixed_trace_motif_cumulants,
     mixed_trace_motif_moments,
 )
+from .network_summary import (
+    SpectralStatisticsResult,
+    spectral_statistics,
+)
 from .null_models import (
     NullModel,
     NullModelName,
@@ -130,6 +134,7 @@ __all__ = [
     "NetworkCutoffResult",
     "NullModel",
     "NullModelName",
+    "SpectralStatisticsResult",
     "ONE_WAY_BIPARTITE_TRIAD_NAMES",
     "OneWayBipartiteRatioResult",
     "PopulationBranchingKind",
@@ -183,6 +188,7 @@ __all__ = [
     "randomize_directed_adjacency",
     "second_order_motif_statistics",
     "shuffle_edge_weights",
+    "spectral_statistics",
     "sonet_motif_statistics",
     "structural_timescale_curve",
     "trace_motif_cumulants",
